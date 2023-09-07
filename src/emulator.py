@@ -29,7 +29,6 @@ class Emulator():
         for i in range(0, 16):
             self.registers[f"V{hex(i).split('x')[1]}"] = 0
         self.I = 0
-        self.sp = 0
         self.pc = int("200", 16)
         self.display_buffer = int("F00", 16)
         self.delay_timer = 0
@@ -51,13 +50,11 @@ class Emulator():
             self.pixels.append([0] * 64)
 
     def call(self, new):
-        self.memory[self.sp] = self.pc
-        self.sp += 1
+        self.stack.append(self.pc)
         self.pc = new
     
     def ret(self):
-        self.pc = self.memory[self.sp]
-        self.sp -= 1
+        self.pc = self.stack.pop()
 
     def set_resolution_multiplier(self, n):
         self.resolution_multiplier = n
@@ -69,11 +66,12 @@ class Emulator():
 
     def print_screen(self):
         os.system('clear')
+        print(f"{self.registers}")
         for row in self.pixels:
             s = ""
             for pixel in row:
-                s += "█" if pixel != 0 else "⠀"
-            print(s)
+                s += "▓" if pixel != 0 else "░"
+            print('\x1b[6;30;42m' + s + '\x1b[0m')
 
     def draw_pixel(self, x, y, on):
         if x < 0 or x >= len(self.pixels[0]) or y < 0 or y >= len(self.pixels):
@@ -83,6 +81,9 @@ class Emulator():
     def skip_next_instruction(self):
         self.skip_flag = True
 
+    def set_memory(self, index, value):
+        self.memory[index] = self.get_real_value(value)
+
     def get_registers(self, a, b):
         return self.get_register(a), self.get_register(b)
 
@@ -90,10 +91,13 @@ class Emulator():
         return self.registers["V" + key]
     
     def set_flag(self, value):
-        self.set_register("f", value)
+        self.set_register("f", self.get_real_value(value))
 
     def set_register(self, key, value):
-        self.registers["V" + key] = value
+        self.registers["V" + key] = self.get_real_value(value)
+
+    def get_real_value(self, value, bits=8):
+        return int(bin(value).split("b")[1].zfill(bits)[-bits:], 2)
 
     def halt(self):
         self.running = False
@@ -107,6 +111,7 @@ class Emulator():
             if "0b" not in line:
                 continue
             self.memory[offset] = int(line, 2)
+            #print(hex(self.memory[offset]))
             offset += 1
         f.close()
 

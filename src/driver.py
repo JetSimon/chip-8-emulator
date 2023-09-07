@@ -1,8 +1,12 @@
 from emulator import Emulator
 import turtle
 import disassembler
+import sys, getopt
 
-filename = "../roms/test_opcode.ch8"
+filename = "../roms/SCTEST.CH8"
+if(len(sys.argv) > 1 and sys.argv[1]):
+    filename = sys.argv[1]
+
 font_filename = "../fonts/chip48font.txt"
 print("Remember all values are in hex")
 

@@ -36,6 +36,7 @@ def apply_instruction_from_opcode(opcode, emulator):
     elif re.match(r"4\w\w\w", opcode):
         x = emulator.get_register(opcode[1])
         n = int(opcode[2:],16)
+        
         if(x != n):
             emulator.skip_next_instruction()
     elif re.match(r"5\w\w0", opcode):
@@ -46,7 +47,8 @@ def apply_instruction_from_opcode(opcode, emulator):
         emulator.set_register(opcode[1], int(opcode[2:], 16))
     elif re.match(r"7\w\w\w", opcode):
         x = emulator.get_register(opcode[1])
-        emulator.set_register(opcode[1], x + int(opcode[2:], 16))
+        n = int(opcode[2:], 16)
+        emulator.set_register(opcode[1], x + n)
     elif re.match(r"8\w\w0", opcode):
         y = emulator.get_register(opcode[2])
         emulator.set_register(opcode[1], y)
@@ -71,7 +73,7 @@ def apply_instruction_from_opcode(opcode, emulator):
         x = emulator.get_register(opcode[1])
         y = emulator.get_register(opcode[2])
         emulator.set_register(opcode[1], x - y)
-        emulator.set_flag(0 if x + y > 15 else 1)
+        emulator.set_flag(0 if x + y > 255 else 1)
     elif re.match(r"8\w\w6", opcode):
         x = emulator.get_register(opcode[1])
         y = emulator.get_register(opcode[2])
@@ -81,7 +83,7 @@ def apply_instruction_from_opcode(opcode, emulator):
         x = emulator.get_register(opcode[1])
         y = emulator.get_register(opcode[2])
         emulator.set_register(opcode[1], y - x)
-        emulator.set_flag(1 if x + y > 15 else 0)
+        emulator.set_flag(1 if x + y > 255 else 0)
     elif re.match(r"8\w\wE", opcode):
         x = emulator.get_register(opcode[1])
         y = emulator.get_register(opcode[2])
@@ -89,12 +91,12 @@ def apply_instruction_from_opcode(opcode, emulator):
         emulator.set_flag(msb(x))
     elif re.match(r"9\w\w0", opcode):
         x, y = emulator.get_registers(opcode[1], opcode[2])
-        print(x,y)
         if(x != y):
             emulator.skip_next_instruction()
     elif re.match(r"a\w\w\w", opcode):
         n = int(opcode[1:], 16)
-        emulator.I = n
+        #print("setting I to address", opcode[1:], n)
+        emulator.I = emulator.get_real_value(n, 16)
     elif re.match(r"b\w\w\w", opcode):
         n = int(opcode[1:], 16)
         emulator.pc = emulator.get_register(0) + n
@@ -128,7 +130,9 @@ def apply_instruction_from_opcode(opcode, emulator):
     elif re.match(r"f\w07", opcode):
         emulator.set_register(opcode[1], emulator.delay_timer)
     elif re.match(r"f\w0a", opcode):
-        emulator.set_register(opcode[1], emulator.sound_timer)
+        key = random.range(0,255)
+        print("Setting random key press", key)
+        emulator.set_register(opcode[1], key)
     elif re.match(r"f\w15", opcode):
         n = int(opcode[1], 16)
         emulator.delay_timer = n
@@ -139,7 +143,7 @@ def apply_instruction_from_opcode(opcode, emulator):
         emulator.I += emulator.get_register(opcode[1])
     elif re.match(r"f\w29", opcode):
         loc = int(opcode[1], 16) * 5
-        #print("Would set I to sprite address for char " + opcode[1] + " = " + str(loc))
+        print("Would set I to sprite address for char " + opcode[1] + " = " + str(loc))
         emulator.I = emulator.memory[loc]
     elif re.match(r"f\w33", opcode):
         value = emulator.get_register(opcode[1])
@@ -147,16 +151,16 @@ def apply_instruction_from_opcode(opcode, emulator):
         value = value / 10
         tens = value % 10
         hundreds = value / 10
-        emulator.memory[emulator.I] = hundreds
-        emulator.memory[emulator.I + 1] = tens
-        emulator.memory[emulator.I + 2] = ones
+        emulator.set_memory(emulator.I, hundreds)
+        emulator.set_memory(emulator.I + 1, tens)
+        emulator.set_memory(emulator.I + 2, ones)
     elif re.match(r"f\w55", opcode):
         x = int(opcode[1], 16)
 
         offset = 0
         for n in range(x):
             key = "V" + hex(n).split("x")[1]
-            emulator.memory[emulator.I + offset] = emulator.registers[key]
+            emulator.set_memory(emulator.I + offset, emulator.registers[key])
             offset += 1
     elif re.match(r"f\w65", opcode):
         x = opcode[1]
@@ -164,9 +168,8 @@ def apply_instruction_from_opcode(opcode, emulator):
 
         offset = 0
         for y in range(0, n + 1):
-            h = hex(y).split('x')[1]
-            key = "V" + h
-            emulator.registers[key] = emulator.memory[emulator.I + offset]
+            key = hex(y).split('x')[1]
+            emulator.set_register(key, emulator.memory[emulator.I + offset])
             offset += 1
     else:
         print("Unimplemented:", opcode, emulator.halt())

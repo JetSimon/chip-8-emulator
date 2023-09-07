@@ -14,6 +14,9 @@ def rom_to_buffer(filename):
 def disassemble(filename, pc = int("200", 16)):
     buffer = rom_to_buffer(filename)
     for i in range(0, len(buffer), 2):
+        if(i + 1 >= len(buffer)):
+            print(hex(pc), buffer[i], "->","just one byte must be data")
+            continue
         opcode = buffer[i] + buffer[i + 1]
         print(hex(pc), buffer[i], buffer[i + 1], "->",opcodes.get_instruction_from_opcode(opcode))
         pc += 1
