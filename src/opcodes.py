@@ -22,6 +22,11 @@ def apply_instruction_from_opcode(opcode, emulator):
         emulator.pc = int(opcode[1:], 16)
     elif re.match(r"2\w\w\w", opcode):
         n = int(opcode[1:], 16)
+
+        if(n >= len(emulator.memory)):
+           print(f"Error: trying to access address outside of memory ({n},{hex(n)})")
+           emulator.halt()
+           return
         emulator.call(emulator.memory[n])
     elif re.match(r"3\w\w\w", opcode):
         x = emulator.get_register(opcode[1])
@@ -84,6 +89,7 @@ def apply_instruction_from_opcode(opcode, emulator):
         emulator.set_flag(msb(x))
     elif re.match(r"9\w\w0", opcode):
         x, y = emulator.get_registers(opcode[1], opcode[2])
+        print(x,y)
         if(x != y):
             emulator.skip_next_instruction()
     elif re.match(r"a\w\w\w", opcode):
@@ -100,11 +106,15 @@ def apply_instruction_from_opcode(opcode, emulator):
         x1 = emulator.get_register(opcode[1])
         y1 = emulator.get_register(opcode[2])
         N = int(opcode[3], 16)
-        print(f"supposed to be drawing 8x{N} at {x1}, {y1}")
-        for y in range(0,N):
-            for x in range(0,8):
-                if(emulator.memory[emulator.I + x] != 0):
-                    emulator.draw_pixel(x1+x, y1+y)
+        I = emulator.I
+        for y in range(0, N):
+            byte = emulator.memory[I + y]
+            x = 0
+            bits = bin(byte).split("b")[1].zfill(8)
+            for bit in bits:
+                emulator.draw_pixel(x1+x, y1+y, int(bit))
+                x += 1
+        emulator.update_display_flag = True
     elif re.match(r"e\w9e", opcode):
         skip = random.randint(0,1) == 0
         print(f"Would skip if key in V{opcode[1]} is pressed, random:", skip)
@@ -128,7 +138,9 @@ def apply_instruction_from_opcode(opcode, emulator):
     elif re.match(r"f\w1e", opcode):
         emulator.I += emulator.get_register(opcode[1])
     elif re.match(r"f\w29", opcode):
-        print("Would set I to sprite address")
+        loc = int(opcode[1], 16) * 5
+        #print("Would set I to sprite address for char " + opcode[1] + " = " + str(loc))
+        emulator.I = emulator.memory[loc]
     elif re.match(r"f\w33", opcode):
         value = emulator.get_register(opcode[1])
         ones = value % 10
@@ -142,16 +154,17 @@ def apply_instruction_from_opcode(opcode, emulator):
         x = int(opcode[1], 16)
 
         offset = 0
-        for key in emulator.registers:
-            if int(key[1], 16) <= x:
-                emulator.memory[emulator.I + offset] = emulator.registers[key]
-                offset += 1
+        for n in range(x):
+            key = "V" + hex(n).split("x")[1]
+            emulator.memory[emulator.I + offset] = emulator.registers[key]
+            offset += 1
     elif re.match(r"f\w65", opcode):
-        n = int(opcode[1], 16)
+        x = opcode[1]
+        n = int(x, 16)
 
         offset = 0
-        for n in range(0, n + 1):
-            h = hex(n).split(x)[1]
+        for y in range(0, n + 1):
+            h = hex(y).split('x')[1]
             key = "V" + h
             emulator.registers[key] = emulator.memory[emulator.I + offset]
             offset += 1

@@ -1,5 +1,4 @@
 - Add timers
 - Add inputs
-- Add sprite support
 - Add a real display maybe eventually
 - Double check all op code implementations
