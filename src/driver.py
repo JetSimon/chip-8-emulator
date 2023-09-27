@@ -3,7 +3,7 @@ import turtle
 import disassembler
 import sys, getopt
 
-filename = "../roms/SCTEST.CH8"
+filename = "../roms/1-chip8-logo.CH8"
 if(len(sys.argv) > 1 and sys.argv[1]):
     filename = sys.argv[1]
 

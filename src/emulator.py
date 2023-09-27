@@ -1,6 +1,8 @@
 import disassembler
 import opcodes
 import os 
+import serial
+import time
 
 """ 
 4K RAM - by convention programs start in RAM at 0x200
@@ -23,7 +25,7 @@ Has stack instructions (so needs an SP)
 DEBUG = False
 
 class Emulator():
-    def __init__(self, filename, font_filename):
+    def __init__(self, filename, font_filename, use_arduino=True):
         self.rom_filename = filename
         self.registers = {}
         for i in range(0, 16):
@@ -49,6 +51,10 @@ class Emulator():
         for y in range(32):
             self.pixels.append([0] * 64)
 
+        self.use_arduino = use_arduino
+        if use_arduino:
+            self.arduino = serial.Serial(port='/dev/cu.usbmodem14501', baudrate=115200, write_timeout=0)
+
     def call(self, new):
         self.stack.append(self.pc)
         self.pc = new
@@ -64,6 +70,10 @@ class Emulator():
         for y in range(32):
             self.pixels.append([0] * 64)
 
+        if self.use_arduino:
+            self.arduino.write(bytes("clrscrn", 'utf-8'))
+            time.sleep(0.01)
+
     def print_screen(self):
         os.system('clear')
         print(f"{self.registers}")
@@ -77,7 +87,13 @@ class Emulator():
         if x < 0 or x >= len(self.pixels[0]) or y < 0 or y >= len(self.pixels):
             return
         self.pixels[y][x] = on ^ self.pixels[y][x]
-
+        if self.use_arduino:
+            toSend = str(x).ljust(3) + str(y).ljust(3) + ("1" if self.pixels[y][x] else "0")
+            self.arduino.write(bytes(toSend, 'utf-8'))
+            #print(f"sent {toSend} now sleep...")
+            time.sleep(1)
+            #print(self.arduino.readlines())
+            #time.sleep(0.2)
     def skip_next_instruction(self):
         self.skip_flag = True
 

@@ -174,6 +174,81 @@ def apply_instruction_from_opcode(opcode, emulator):
     else:
         print("Unimplemented:", opcode, emulator.halt())
 
+def get_instruction_type_from_opcode(opcode):
+    if re.match(r"00ee", opcode):
+        return "00EE"
+    elif re.match(r"00e0", opcode):
+        return "00E0"
+    elif re.match(r"0\w\w\w", opcode):
+        return "0NNN"
+    elif re.match(r"1\w\w\w", opcode):
+        return f"1NNN"
+    elif re.match(r"2\w\w\w", opcode):
+        return f"2NNN"
+    elif re.match(r"3\w\w\w", opcode):
+        return f"3XNN"
+    elif re.match(r"4\w\w\w", opcode):
+        return f"4XNN"
+    elif re.match(r"5\w\w0", opcode):
+        return f"5XY0"
+    elif re.match(r"6\w\w\w", opcode):
+        return f"6XNN"
+    elif re.match(r"7\w\w\w", opcode):
+        return f"7XNN"
+    elif re.match(r"8\w\w0", opcode):
+        return f"8XY0"
+    elif re.match(r"8\w\w1", opcode):
+        return f"8XY1"
+    elif re.match(r"8\w\w2", opcode):
+        return f"8XY3"
+    elif re.match(r"8\w\w3", opcode):
+        return f"8XY3"
+    elif re.match(r"8\w\w4", opcode):
+        return f"8XY4"
+    elif re.match(r"8\w\w5", opcode):
+        return f"8XY5"
+    elif re.match(r"8\w\w6", opcode):
+        return f"8XY6"
+    elif re.match(r"8\w\w7", opcode):
+        return f"8XY7"
+    elif re.match(r"8\w\wE", opcode):
+        return f"8XYE"
+    elif re.match(r"9\w\w0", opcode):
+        return f"9XY0"
+    elif re.match(r"a\w\w\w", opcode):
+        return f"ANNN"
+    elif re.match(r"b\w\w\w", opcode):
+        return f"BNNN"
+    elif re.match(r"c\w\w\w", opcode):
+        return f"CNNN"
+    elif re.match(r"d\w\w\w", opcode):
+        return f"DXYN"
+    elif re.match(r"e\w9e", opcode):
+        return f"EX9E"
+    elif re.match(r"e\wa1", opcode):
+        return f"EXA1"
+    elif re.match(r"f\w07", opcode):
+        return f"FX07"
+    elif re.match(r"f\w0a", opcode):
+        return f"FX0A"
+    elif re.match(r"f\w15", opcode):
+        return f"FX15"
+    elif re.match(r"f\w18", opcode):
+        return f"FX18"
+    elif re.match(r"f\w1e", opcode):
+        return f"FX1E"
+    elif re.match(r"f\w29", opcode):
+        return f"FX29"
+    elif re.match(r"f\w33", opcode):
+        return f"FX33"
+    elif re.match(r"f\w55", opcode):
+        return f"FX55"
+    elif re.match(r"f\w65", opcode):
+        return f"FX65"
+    else:
+        return None
+    
+
 def get_instruction_from_opcode(opcode):
     if re.match(r"00ee", opcode):
         return "Return"

@@ -8,4 +8,9 @@ if(len(sys.argv) > 1 and sys.argv[1]):
 
 print("Trying to convert " + filename)
 
-print(disassembler.rom_to_buffer(filename))
+bytes = disassembler.rom_to_buffer(filename)
+
+for i in range(len(bytes)):
+    bytes[i] = "0x" + bytes[i]
+
+print("#define ROM " + str(bytes).replace("'", "").replace("[","").replace("]",""))
